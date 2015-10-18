@@ -49,8 +49,7 @@ output_directory="/tmp/sniffer/"
 min_size=0
 max_size=5000000
 content_type=["image/jpeg","image/png","image/gif"]
-prefix_filter=""
-suffix_filter=""
+verbose=True
 time_out=30
 purge_time=10
 
@@ -150,7 +149,8 @@ def find_files(x):
 							headers_key=packets[packet_id]['headers_key']
 							if headers_key in headers:
 								if headers[headers_key]['name'] != '':
-									print(output_directory+headers[headers_key]['name'])
+									if verbose:
+										print(output_directory+headers[headers_key]['name'])
 									with io.open(output_directory+headers[headers_key]['name'], 'wb') as f:
 										f.write(packets[packet_id]['data'])
 								del packets[packet_id]
@@ -167,13 +167,16 @@ def find_files(x):
 
 
 parser = optparse.OptionParser(usage="%prog: [options]")
-parser.add_option("-i", "--iface", dest="iface", default='', help="Interface")
-parser.add_option("-o", "--output", dest="directory", default=output_directory, help="Output directory. Default : "+output_directory)
 parser.add_option("-c", "--ctype", dest="content_type", default=','.join(content_type), help="""Content-type separate by ','.
 					List of content-type : https://www.iana.org/assignments/media-types/media-types.xhtml
 					Default : """+','.join(content_type))
+parser.add_option("-i", "--iface", dest="iface", default='', help="Interface")
 parser.add_option("", "--min-size", dest="min_size", default=str(min_size), help="Min file size in octets. Default : "+str(min_size))
 parser.add_option("", "--max-size", dest="max_size", default=str(max_size), help="Max file size in octets. Default : "+str(max_size))
+parser.add_option("-o", "--output", dest="directory", default=output_directory, help="Output directory. Default : "+output_directory)
+parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True, help="Quiet. Default : Off")
+
+
 (options, args) = parser.parse_args()
 
 if options.directory != "":
@@ -193,6 +196,8 @@ if options.min_size != "":
 
 if options.max_size != "":
 	max_size=int(options.max_size)
+
+verbose=options.verbose
 
 packets={}
 headers={}
