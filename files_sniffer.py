@@ -31,7 +31,6 @@
 #
 # List of content-type : https://www.iana.org/assignments/media-types/media-types.xhtml
 
-import io
 import time
 import os
 import optparse
@@ -129,7 +128,8 @@ def find_files(x):
 						packets[packet_id]={ 'seq':[seq],
 											'head':head,
 											'headers_key':dst+"#"+src+"#"+dport+"#"+seq,
-											'data':data,
+											'data':{int(seq):data},
+											'data_content_length':len(data),
 											'content_length':content_length,
 											'up_time':time.time()
 											}
@@ -137,14 +137,12 @@ def find_files(x):
 			if packet_id in packets:
 				if seq not in packets[packet_id]['seq']:
 					packets[packet_id]['seq'].append(seq)
-					if 'data' not in packets[packet_id]:
-						packets[packet_id]['data']=bytes(x.getlayer(Raw))
-					else:
-						packets[packet_id]['data']+=bytes(x.getlayer(Raw))
+					packets[packet_id]['data'][int(seq)]=bytes(x.getlayer(Raw))
+					packets[packet_id]['data_content_length']+=len(bytes(x.getlayer(Raw)))
 					packets[packet_id]['up_time']=time.time()
 					headers[packets[packet_id]['headers_key']]['up_time']=time.time()
 
-					if len(packets[packet_id]['data']) == packets[packet_id]['content_length']:
+					if packets[packet_id]['data_content_length'] == packets[packet_id]['content_length']:
 						if packet_id in packets:
 							headers_key=packets[packet_id]['headers_key']
 							if headers_key in headers:
@@ -153,8 +151,10 @@ def find_files(x):
 										headers[headers_key]['name']=headers[headers_key]['name'][:126]+headers[headers_key]['name'][-126:]
 									if verbose:
 										print(output_directory+headers[headers_key]['name'])
-									with io.open(output_directory+headers[headers_key]['name'], 'wb') as f:
-										f.write(packets[packet_id]['data'])
+									f=open(output_directory+headers[headers_key]['name'], 'wb')
+									for data_seq in sorted(packets[packet_id]['data']):
+										f.write(packets[packet_id]['data'][data_seq])
+									f.close()
 								del packets[packet_id]
 								del headers[headers_key]
 								if headers_key in packets:
@@ -163,6 +163,15 @@ def find_files(x):
 									del headers[packet_id]
 							else:
 								del packets[packet_id]
+					elif packets[packet_id]['data_content_length'] > packets[packet_id]['content_length']:
+						if packet_id in packets:
+							del packets[packet_id]
+						if headers_key in headers:
+							del headers[headers_key]
+						if headers_key in packets:
+							del packets[headers_key]
+						if packet_id in headers:
+							del headers[packet_id]
 
 		if last_purge + purge_time < time.time():
 			purge()
