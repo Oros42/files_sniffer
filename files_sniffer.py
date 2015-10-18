@@ -149,6 +149,8 @@ def find_files(x):
 							headers_key=packets[packet_id]['headers_key']
 							if headers_key in headers:
 								if headers[headers_key]['name'] != '':
+									if len(headers[headers_key]['name']) > 255:
+										headers[headers_key]['name']=headers[headers_key]['name'][:126]+headers[headers_key]['name'][-126:]
 									if verbose:
 										print(output_directory+headers[headers_key]['name'])
 									with io.open(output_directory+headers[headers_key]['name'], 'wb') as f:
