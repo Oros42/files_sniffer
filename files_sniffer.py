@@ -7,7 +7,7 @@
 # by Oros
 #
 # Setup :
-# $ sudo apt-get install python-scapy
+# $ sudo apt-get install python-scapy dvi2ps
 # http://secdev.org/projects/scapy/doc/usage.html
 #
 # Help :

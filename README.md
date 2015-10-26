@@ -5,7 +5,7 @@ Sniff every types of files you want on your network interface and save it.
 Setup
 -----
 ```
-$ sudo apt-get install python-scapy
+$ sudo apt-get install python-scapy dvi2ps
 ```
 
   
